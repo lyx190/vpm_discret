@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=6,7 python Softmax_Triplet_Partial.py -a resnet50 -b 128 -d market -j4 --height 256 --width 128 --features 256 --combine-trainval --num-instances 8 --log logs/tmp  --data-dir ~/datasets/Market-1501/ --margin 1 --ratio 0.8 --resume ~/backup_32server/open-reid/logs/market-1501/soft_triplet_partial1.0/checkpoint.pth.tar --evaluate --ratio $1
