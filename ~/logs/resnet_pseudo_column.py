@@ -134,6 +134,7 @@ class ResNet(nn.Module):
 #=======================FCN===============================#
         if self.FCN:
             x_global = F.avg_pool2d(x, (24,8))
+            pdb.set_trace()
 #====================================================================================
             # part_labels = part_labels.unsqueeze(1).expand(x.size(0), self.num_parts, x.size(2))
             score = []

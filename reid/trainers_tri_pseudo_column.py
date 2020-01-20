@@ -69,6 +69,7 @@ class BaseTrainer(object):
             # weight_ploss = min((epoch/10)/10., 1.0)     #considering dynamically adjusting the weight of part-classifier loss, not used
             #ploss = ploss*weight_ploss
             total_loss = loss + [gloss, Tloss]    #please note that loss is also a list
+            # total_loss = loss + [gloss]
            # total_loss = [gloss, ploss, Tloss]
             torch.autograd.backward(total_loss, [torch.ones(1).squeeze(0).cuda()]*len(total_loss))
             # final_loss = 0
@@ -120,9 +121,9 @@ class Trainer(BaseTrainer):
 
             loss = []
             for i in range(targets.size(1)):
-                loss.append(self.criterion_ID(outputs[1][i], targets[:,i]))
+                loss.append(self.criterion_ID(outputs[1][i], targets[:, i]))
             gloss = loss[-1]
-            loss = loss[0:-1]
+            loss = loss[0: -1]
             # ploss = 0
             # ploss = self.criterion_part(outputs[2],ptargets)
             prec, = accuracy(outputs[1][-1].data, targets[:,-1].data)
@@ -132,7 +133,7 @@ class Trainer(BaseTrainer):
             ##############################
             #       detach  pscore       #
             ##############################
-            pscore = outputs[3].detach()
+            # pscore = outputs[3].detach()
             Tloss, prec2, ap, an = self.criterion_tri(tri_feat, targets[:,-1], ptargets)
                         
         elif self.criterion == 'cosface':

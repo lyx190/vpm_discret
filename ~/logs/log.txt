@@ -4,3 +4,7 @@ Market dataset loaded
   train    |   751 |    12936
   query    |   750 |     3368
   gallery  |   751 |    15913
+> /root/vpm_discret/reid/models/resnet_pseudo_column.py(140)forward()
+-> score = []
+(Pdb) torch.Size([64, 2048, 1, 1])
+(Pdb) 

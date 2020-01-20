@@ -69,6 +69,7 @@ class BaseTrainer(object):
             # weight_ploss = min((epoch/10)/10., 1.0)     #considering dynamically adjusting the weight of part-classifier loss, not used
             #ploss = ploss*weight_ploss
             total_loss = loss + [gloss, Tloss]    #please note that loss is also a list
+            # total_loss = loss + [gloss]
            # total_loss = [gloss, ploss, Tloss]
             torch.autograd.backward(total_loss, [torch.ones(1).squeeze(0).cuda()]*len(total_loss))
             # final_loss = 0
@@ -120,7 +121,7 @@ class Trainer(BaseTrainer):
 
             loss = []
             for i in range(targets.size(1)):
-                loss.append(self.criterion_ID(outputs[1][i], targets[:,i]))
+                loss.append(self.criterion_ID(outputs[1][i], targets[:, i]))
             gloss = loss[-1]
             loss = loss[0:-1]
             # ploss = 0
