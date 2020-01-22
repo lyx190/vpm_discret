@@ -28,6 +28,7 @@ class BaseTrainer(object):
        # self.criterion_part = nn.CrossEntropyLoss(weight = weight_part).cuda()
         self.criterion_part = nn.CrossEntropyLoss().cuda()
         self.criterion_ID = nn.CrossEntropyLoss(weight = weight_id).cuda()
+        # self.criterion_ID = nn.CrossEntropyLoss(ignore_index = 751).cuda()
         self.criterion_tri = PartialTripletLoss(margin=Triplet_margin).cuda()
         # self.criterion_ID_cos = CosFaceLoss(m=0, s=16, weight = weight_id).cuda()
         
@@ -70,6 +71,7 @@ class BaseTrainer(object):
             #ploss = ploss*weight_ploss
             total_loss = loss + [gloss, Tloss]    #please note that loss is also a list
             # total_loss = loss + [gloss]
+            # total_loss = [Tloss]
            # total_loss = [gloss, ploss, Tloss]
             torch.autograd.backward(total_loss, [torch.ones(1).squeeze(0).cuda()]*len(total_loss))
             # final_loss = 0
@@ -120,8 +122,15 @@ class Trainer(BaseTrainer):
         if self.criterion== 'ce':
 
             loss = []
+            # for i in range(targets.size(1)):
+                # loss.append(self.criterion_ID(outputs[1][i], targets[:, i]))
             for i in range(targets.size(1)):
-                loss.append(self.criterion_ID(outputs[1][i], targets[:, i]))
+                label = []
+                for j in range(targets.size(0)):
+                    if targets[j, i] != 751:
+                        label.append(targets[j, i])
+                label = torch.tensor(label).cuda()
+                loss.append(self.criterion_ID(outputs[1][i], label))
             gloss = loss[-1]
             loss = loss[0: -1]
             # ploss = 0

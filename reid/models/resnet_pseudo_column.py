@@ -133,6 +133,7 @@ class ResNet(nn.Module):
             return x
 #=======================FCN===============================#
         if self.FCN:
+            x_cls = x.mean(3, keepdim=False)
             x_global = F.avg_pool2d(x, (24,8))
 #====================================================================================
             # part_labels = part_labels.unsqueeze(1).expand(x.size(0), self.num_parts, x.size(2))
@@ -151,28 +152,27 @@ class ResNet(nn.Module):
 
             out0 = x / torch.clamp(x.norm(2, 1).unsqueeze(1).expand_as(x), min=1e-12)
 
-            # x_cls = x_cls.mean(3, keepdim=False)
-            # x_list = []
-            # for i in range(self.num_parts):
-                # x_list.append([])
-            # for tensor, clip in zip(x_cls, rp):
-                # part_feats = tensor.chunk(int(clip), 1)
-                # for i in range(len(part_feats)):
-                    # x_list[i].append(part_feats[i].mean(1, keepdim=False))
-            # for i in range(self.num_parts):
-                # x_list[i] = torch.stack(x_list[i])
-            # x_list.append(x_global)
-            # c = []
-            # for tensor, branch in zip(x_list, self.instance):
-                # tensor = tensor.contiguous().view(tensor.size(0), -1)
-                # c.append(branch(tensor)) 
-
-            x_list = list(x.chunk(x.size(2), 2))
+            x_list = []
+            for i in range(self.num_parts):
+                x_list.append([])
+            for tensor, clip in zip(x_cls, rp):
+                part_feats = tensor.chunk(int(clip), 1)
+                for i in range(len(part_feats)):
+                    x_list[i].append(part_feats[i].mean(1, keepdim=False))
+            for i in range(self.num_parts):
+                x_list[i] = torch.stack(x_list[i])
             x_list.append(x_global)
             c = []
             for tensor, branch in zip(x_list, self.instance):
                 tensor = tensor.contiguous().view(tensor.size(0), -1)
-                c.append(branch(tensor))
+                c.append(branch(tensor)) 
+
+            # x_list = list(x.chunk(x.size(2), 2))
+            # x_list.append(x_global)
+            # c = []
+            # for tensor, branch in zip(x_list, self.instance):
+                # tensor = tensor.contiguous().view(tensor.size(0), -1)
+                # c.append(branch(tensor))
             ps = score
 
             return out0, c, ps, pscore#, pool5#, orig_weight, pool5#, (, x1, x2, x3, x4, x5) #, glob#, c6, c7
