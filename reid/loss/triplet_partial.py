@@ -15,9 +15,13 @@ class PartialTripletLoss(nn.Module):
         dist = torch.pow(part_feat, 2).sum(1).expand(n, n)
         dist = dist + dist.t()
         dist.addmm_(1, -2, part_feat, part_feat.t())
-        dist = torch.clamp(dist, min=1e-15)
+        # dist = torch.clamp(dist, min=1e-15)
         dist = torch.clamp(dist, min=1e-12).sqrt()
         return dist
+    def cos_dist(self, part_feat):
+        n = part_feat.size(0)
+        dot = torch.matmul(part_feat, part_feat.t())
+        return (1. - dot).clamp(min=1e-12)
      
     def forward(self, inputs, targets, part_labels):
         # For each anchor, find the hardest positive and negative
@@ -49,7 +53,7 @@ class PartialTripletLoss(nn.Module):
         for i in range(num_parts):
 #            part_dist.append(self.square_dist(inputs[:,:,i]*weights[i]).unsqueeze(2))
             x = inputs[:,:,i]
-            part_dist.append(self.square_dist(x).unsqueeze(2))
+            part_dist.append(self.cos_dist(x).unsqueeze(2))
         part_dist = torch.cat(part_dist, 2)
         part_dist = part_dist.clamp(min=1e-15)
         # mask_part = join_flag / num
@@ -78,21 +82,3 @@ class PartialTripletLoss(nn.Module):
         prec = (dist_an.data > dist_ap.data).sum() * 1. / y.size(0)
         return loss, prec, dist_ap.mean(), dist_an.mean()
 
-
-class PartialTripletLoss_1(nn.Module):
-    def __init__(self, margin=0):
-        super(PartialTripletLoss, self).__init__()
-        self.margin = margin
-        self.ranking_loss = nn.MarginRankingLoss(margin=margin)
-
-    def square_dist(self, part_feat):
-        n = part_feat.size(0)
-        dist = torch.pow(part_feat, 2).sum(1).expand(n, n)
-        dist = dist + dist.t()
-        dist.addmm_(1, -2, part_feat, part_feat.t())
-        dist = torch.clamp(dist, min=1e-15)
-        dist = torch.clamp(dist, min=1e-12).sqrt()
-        return dist
-    
-    def forawrd(self, inputs, targets, part_labels, pscore):
-        num_parts = inputs.size(2)
