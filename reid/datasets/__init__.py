@@ -3,6 +3,9 @@ from .duke import Duke
 from .market import Market
 from .market_partial_gallery import Market_partial_gallery
 from .market_partial_query import Market_partial_query
+from .partial_ilids import Partial_iLIDS
+from .partial_reid import Partial_REID
+from .partial_reid_group import Partial_REID_group
 
 
 __factory = {
@@ -10,6 +13,9 @@ __factory = {
     'duke': Duke,
     'market_partial_query': Market_partial_query,
     'market_partial_gallery': Market_partial_gallery,
+    'partial_ilids': Partial_iLIDS,
+    'partial_reid': Partial_REID,
+    'partial_reid_group': Partial_REID_group,
 }
 
 

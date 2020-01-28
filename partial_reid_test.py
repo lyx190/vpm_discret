@@ -13,7 +13,8 @@ from reid import datasets
 from reid import models
 from reid.trainers_tri_pseudo_column import Trainer
 #========================change the evaluator mode here================#
-from reid.evaluators_adaptive_part import Evaluator
+# from reid.evaluators_adaptive_part import Evaluator
+from reid.evaluators_partial_reid import Evaluator
 #======================================================================#
 #from reid.evaluators import Evaluator
 
@@ -80,7 +81,7 @@ def get_data(name, data_dir, height, width, ratio, batch_size, workers, num_inst
     return dataset, num_classes, train_loader, query_loader, gallery_loader
 
 
-def main(args):
+def  main(args):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
@@ -127,51 +128,6 @@ def main(args):
         print("Test:")
         evaluator.evaluate(query_loader, gallery_loader,  dataset.query, dataset.gallery)
         return
-
-    # Criterion
-    criterion = nn.CrossEntropyLoss().cuda()
-
-    # Optimizer
-    if hasattr(model.module, 'base'):
-        base_param_ids = set(map(id, model.module.base.parameters()))
-        new_params = [p for p in model.parameters() if
-                      id(p) not in base_param_ids]
-        param_groups = [
-            {'params': model.module.base.parameters(), 'lr_mult': 0.1},
-            {'params': new_params, 'lr_mult': 1.0}]
-    else:
-        param_groups = model.parameters()
-    optimizer = torch.optim.SGD(param_groups, lr=args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay,
-                                nesterov=True)
-
-    # Trainer
-    trainer = Trainer(model, criterion)
-
-    # Schedule learning rate
-    def adjust_lr(epoch):
-        step_size = 60 if args.arch == 'inception' else args.step_size
-        lr = args.lr * (0.2 ** (epoch // step_size))
-        for g in optimizer.param_groups:
-            g['lr'] = lr * g.get('lr_mult', 1)
-
-    # Start training
-    for epoch in range(start_epoch, args.epochs):
-        adjust_lr(epoch)
-        trainer.train(epoch, train_loader, optimizer, num_parts=args.num_parts)
-        is_best = True
-        save_checkpoint({
-            'state_dict': model.module.state_dict(),
-            'epoch': epoch + 1,
-            'best_top1': best_top1,
-        }, is_best, fpath=osp.join(args.logs_dir, 'checkpoint_'+str(epoch+1)+'.pth.tar'))
-
-    # Final test
-    print('Test with best model:')
-    checkpoint = load_checkpoint(osp.join(args.logs_dir, 'checkpoint_'+str(args.epochs)+'.pth.tar'))
-    model.module.load_state_dict(checkpoint['state_dict'])
-    evaluator.evaluate(query_loader, gallery_loader, dataset.query, dataset.gallery)
 
 
 if __name__ == '__main__':
