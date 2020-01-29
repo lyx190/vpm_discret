@@ -122,7 +122,7 @@ class ResNet(nn.Module):
         if not self.pretrained:
             self.reset_params()
 
-    def forward(self, inputs, rp, ratio, part_labels=None):
+    def forward(self, inputs, rp=None, ratio=None, part_labels=None):
         x = inputs
         for name, module in self.base._modules.items():
             if name == 'avgpool':

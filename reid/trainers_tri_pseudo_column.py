@@ -117,7 +117,7 @@ class Trainer(BaseTrainer):
     def _forward(self, inputs, ratio, start_ratio, targets, num_parts, rp):
         targets, ptargets = generate_column_labels(targets, ratio, start_ratio, num_parts)
         # outputs = self.model(*[inputs, ptargets.float()])
-        outputs = self.model(inputs, rp, ratio, part_labels=ptargets.float())
+        outputs = self.model(inputs, rp=rp, ratio=ratio, part_labels=ptargets.float())
 
         if self.criterion== 'ce':
 
