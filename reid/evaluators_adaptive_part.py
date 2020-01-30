@@ -147,25 +147,28 @@ def pairwise_distance_adaptive(query_features, gallery_features, query=None, gal
 
     x = torch.cat([query_features[f].unsqueeze(0) for f, _, _ in query], 0)
     y = torch.cat([gallery_features[f].unsqueeze(0) for f, _, _ in gallery], 0)
-    y_list = [f.mean(2) for f in y.chunk(6, 2)]
-
+    
+    xs, ys = [], []
+    for part_num in range(3, 7):
+        x_list = [f.mean(2) for f in x.chunk(part_num, 2)]
+        x_list = [f / f.norm(2, 1, keepdim=True).expand_as(f) for f in x_list]
+        xs.append(x_list)
+        y_list = [f.mean(2) for f in y.chunk(part_num, 2)]
+        y_list = [f / f.norm(2, 1, keepdim=True).expand_as(f) for f in y_list]
+        ys.append(y_list)
+    
     distmat = []
-    for i in range(x.size(0)):
-        single = x[i].unsqueeze(0)
-        pos_index = pos_indices[i]
-        dist = []
-        for j in range(3, 7):
-            single_parts = [f.mean(2) for f in single.chunk(j, 2)]
-            dist_parts = 0
-            for z in range(len(single_parts)):
-                dist_parts += euclidean_dist(single_parts[z], y_list[z])
-            dist.append(dist_parts / j)
-        pos_dist = []
-        for j in range(len(dist)):
-            pos_dist.append((dist[j] * pos_index).sum())
-        min_index = pos_dist.index(min(pos_dist))
-        distmat.append(dist[min_index])
-    distmat = torch.cat(distmat, 0)
+    for i in range(4):
+        for j in range(4):
+            dist = 0
+            num = min(len(xs[i]), len(ys[i]))
+            for z in range(num):
+                dist += cos_dist(xs[i][z], ys[i][z]) / num
+            distmat.append(dist)
+    
+    distmat = torch.cat([f.unsqueeze(0) for f in distmat], 0)
+    distmat = torch.min(distmat, dim=0, keepdim=False)
+    distmat = distmat.values
 
     return distmat
 
@@ -223,5 +226,5 @@ class Evaluator(object):
         query_features, query_parts, _ = extract_features(self.model, query_loader)
         print('extracting gallery features\n')
         gallery_features, gallery_parts, _ = extract_features(self.model, gallery_loader)
-        distmat = pairwise_distance_pcb(query_features, gallery_features, query, gallery)
+        distmat = pairwise_distance_adaptive(query_features, gallery_features, query, gallery)
         return evaluate_all(distmat, query=query, gallery=gallery)
