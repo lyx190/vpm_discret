@@ -174,7 +174,6 @@ def pairwise_distance_part(query_features, gallery_features, query=None, gallery
 
     return distmat
 
-
     
 def pairwise_distance_ilids(query_features, gallery_features, query=None, gallery=None):
     if query is None and gallery is None:
@@ -214,8 +213,6 @@ def pairwise_distance_ilids(query_features, gallery_features, query=None, galler
 
     return distmat
 
-
-
 def euclidean_dist(x, y):
     m, n = x.size(0), y.size(0)
     x = x.view(m, -1)
@@ -224,7 +221,6 @@ def euclidean_dist(x, y):
            torch.pow(y, 2).sum(1).unsqueeze(1).expand(n, m).t()
     dist.addmm_(1, -2, x, y.t())
     return dist
-
 
 
 def evaluate_all(distmat, query=None, gallery=None,

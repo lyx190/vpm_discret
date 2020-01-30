@@ -31,16 +31,16 @@ def extract_cnn_feature(model, inputs, modules=None, return_mask = False):
         h.remove()
     return list(outputs.values())
 
-def extract_part_feature(model, inputs, modules=None, return_mask = False):
+def extract_part_feature(model, inputs, modules=None, return_mask=False):
     model.eval()
     inputs = to_torch(inputs)
     inputs = Variable(inputs, volatile=True)
     if modules is None:
-        tmp = model(inputs)
-        outputs = [tmp[0],tmp[3]]  # 0 for the whole feature, 3 for the part_indicator
+        tmp = model(inputs, test=True)
+        outputs = [tmp[0],tmp[1]]  # 0 for the whole feature, 3 for the part_indicator
         outputs = [outputs[0].data.cpu(), outputs[1].data.cpu()]
         if return_mask:
-            mask = tmp[3]
+            mask = tmp[1]
             mask = mask.data.cpu()
             return outputs, mask
         return outputs

@@ -122,7 +122,7 @@ class ResNet(nn.Module):
         if not self.pretrained:
             self.reset_params()
 
-    def forward(self, inputs, rp=None, ratio=None, part_labels=None):
+    def forward(self, inputs, rp=None, ratio=None, part_labels=None, test=False):
         x = inputs
         for name, module in self.base._modules.items():
             if name == 'avgpool':
@@ -131,6 +131,11 @@ class ResNet(nn.Module):
 
         if self.cut_at_pooling:
             return x
+
+        if test is True:
+            out0 = torch.mean(x, dim=3, keepdim=False)
+            x_global = F.avg_pool2d(x, (24, 8))
+            return out0, x_global
 #=======================FCN===============================#
         if self.FCN:
             x_cls = x.mean(3, keepdim=False)
