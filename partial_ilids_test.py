@@ -13,8 +13,8 @@ from reid import datasets
 from reid import models
 from reid.trainers_tri_pseudo_column import Trainer
 #========================change the evaluator mode here================#
-# from reid.evaluators_adaptive_part import Evaluator
-from reid.evaluators_partial_ilids import Evaluator
+from reid.evaluators_adaptive_part import Evaluator
+# from reid.evaluators_partial_ilids import Evaluator
 #======================================================================#
 #from reid.evaluators import Evaluator
 
@@ -35,15 +35,16 @@ def get_data(name, data_dir, height, width, ratio, batch_size, workers, num_inst
                              std=[0.229, 0.224, 0.225])
 
     
-    num_classes = dataset.num_train_ids + 1  #   plus 1 more label for the zero-padded feature
+    # num_classes = dataset.num_train_ids + 1  #   plus 1 more label for the zero-padded feature
+    num_classes = 752
 
-    train_transformer = T.Compose([
-        T.RectScale(height, width),
-        T.RandomHorizontalFlip(),
-        T.RandomVerticalCropCont(height,width),
-        T.ListToTensor(),
-        listnormalizer,
-    ])
+    # train_transformer = T.Compose([
+    #     T.RectScale(height, width),
+    #     T.RandomHorizontalFlip(),
+    #     T.RandomVerticalCropCont(height,width),
+    #     T.ListToTensor(),
+    #     listnormalizer,
+    # ])
 
     test_transformer = T.Compose([
         T.RectScale(height, width),
@@ -57,13 +58,13 @@ def get_data(name, data_dir, height, width, ratio, batch_size, workers, num_inst
         normalizer,
     ])
 
-    train_loader = DataLoader(
-        Preprocessor(dataset.train, root=osp.join(dataset.images_dir,dataset.train_path),
-                    transform=train_transformer),
-        batch_size=batch_size, num_workers=workers,
-        sampler=RandomIdentitySampler(dataset.train, num_instances),
-#        shuffle=True,
-        pin_memory=True, drop_last=True)
+#     train_loader = DataLoader(
+#         Preprocessor(dataset.train, root=osp.join(dataset.images_dir,dataset.train_path),
+#                     transform=train_transformer),
+#         batch_size=batch_size, num_workers=workers,
+#         sampler=RandomIdentitySampler(dataset.train, num_instances),
+# #        shuffle=True,
+#         pin_memory=True, drop_last=True)
 
     query_loader = DataLoader(
         Preprocessor(dataset.query, root=osp.join(dataset.images_dir,dataset.query_path),
@@ -78,7 +79,8 @@ def get_data(name, data_dir, height, width, ratio, batch_size, workers, num_inst
         shuffle=False, pin_memory=True)
 
 
-    return dataset, num_classes, train_loader, query_loader, gallery_loader
+    # return dataset, num_classes, train_loader, query_loader, gallery_loader
+    return dataset, num_classes, query_loader, gallery_loader
 
 
 def  main(args):
@@ -95,7 +97,7 @@ def  main(args):
     if args.height is None or args.width is None:
         args.height, args.width = (144, 56) if args.arch == 'inception' else \
                                   (256, 128)
-    dataset, num_classes, train_loader, query_loader, gallery_loader = \
+    dataset, num_classes, query_loader, gallery_loader = \
         get_data(args.dataset,  args.data_dir, args.height,
                  args.width, args.ratio, args.batch_size, args.workers, args.num_instances
                  )
